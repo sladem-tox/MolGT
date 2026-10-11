@@ -10,7 +10,7 @@ from graphormer.data.datasets.graphormer_dataset import FileDataset
 
 @pytest.fixture
 def table():
-    return pd.DataFrame({"smiles": ["CCO", "CC", "CCC", "CO", "CN", "CCN", "C", "CNC"], "ames": [0, 1] * 4})
+    return pd.DataFrame({"smiles": ["CCO", "CC", "CCC", "CO", "CN", "CCN", "C", "CNC"], "target": [0, 1] * 4})
 
 
 @pytest.mark.parametrize("extension", ["csv", "xlsx"])
@@ -46,13 +46,13 @@ def test_inference_uses_all_rows_regardless_of_filename(tmp_path, table, name, e
     config = DataConfig(str(path), DatasetRegime.TEST, 3, 3).with_num_workers(0)
     loader = config.build()
     assert list(loader.dataset.indices) == list(range(len(table)))
-    assert [label for batch in loader for label in batch.y.tolist()] == table.ames.tolist()
+    assert [label for batch in loader for label in batch.y.tolist()] == table.target.tolist()
 
 
 def test_missing_columns(tmp_path):
     path = tmp_path / "molecules.csv"
     path.write_text("smiles\nCCO\n")
-    with pytest.raises(ValueError, match="missing: ames"):
+    with pytest.raises(ValueError, match="missing: target"):
         FileDataset(path)
 
 
@@ -89,7 +89,7 @@ def test_invalid_dataset_path(command, tmp_path):
 @pytest.mark.parametrize("label", [2, -1, None, "invalid"])
 def test_invalid_labels_are_rejected(tmp_path, label):
     path = tmp_path / "molecules.csv"
-    pd.DataFrame({"smiles": ["CCO"], "ames": [label]}).to_csv(path, index=False)
+    pd.DataFrame({"smiles": ["CCO"], "target": [label]}).to_csv(path, index=False)
     with pytest.raises(ValueError, match="binary labels"):
         FileDataset(path)
 
@@ -97,7 +97,7 @@ def test_invalid_labels_are_rejected(tmp_path, label):
 @pytest.mark.parametrize("smiles", ["invalid", "", None])
 def test_invalid_smiles_are_rejected(tmp_path, smiles):
     path = tmp_path / "Combined.csv"
-    pd.DataFrame({"smiles": [smiles, "CCO"], "ames": [0, 1]}).to_csv(path, index=False)
+    pd.DataFrame({"smiles": [smiles, "CCO"], "target": [0, 1]}).to_csv(path, index=False)
     with pytest.raises(ValueError, match="SMILES"):
         FileDataset(path)
 
@@ -119,5 +119,5 @@ def test_mc_samples_have_independent_results(tmp_path, table, monkeypatch):
     assert samples[0]["labels"] is not samples[1]["labels"]
     assert samples[0]["logits"] is not samples[1]["logits"]
     for sample in samples:
-        assert sample["labels"] == table.ames.tolist()
+        assert sample["labels"] == table.target.tolist()
         assert len(sample["logits"]) == len(table)

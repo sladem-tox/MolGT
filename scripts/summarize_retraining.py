@@ -11,7 +11,7 @@ def main():
     root = Path('data/reconstructed/training_run')
     result = json.loads((root/'retrained_result.json').read_text())
     frame = pd.read_csv(root/'retrained_test_predictions.csv')
-    labels = frame.ames.to_numpy()
+    labels = frame.target.to_numpy()
     models = {name: json.loads((root/f'{name}.json').read_text()) for name in ['pro_legacy', 'pro_corrected']}
     probabilities = {name: np.asarray(model['probabilities']) for name, model in models.items()}
     probabilities['retrained'] = frame.probability.to_numpy()

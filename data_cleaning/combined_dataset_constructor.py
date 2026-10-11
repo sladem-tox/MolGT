@@ -120,6 +120,7 @@ else:
 
 
 combined_cleaned = pd.concat([combined_cleaned, honma_test])
+combined_cleaned = combined_cleaned.rename(columns={'ames': 'target'})
 
 combined_cleaned.to_csv("combined_datasets/Combined_2s_as_0s.csv", index=False)
 combined_cleaned.to_excel("combined_datasets/Combined_2s_as_0s.xlsx", index=False)
@@ -130,4 +131,3 @@ test_len = len(combined_cleaned[combined_cleaned['split'] == 'Test'])
 
 print(f"Length of Train/Validation set: {train_val_len}")
 print(f"Length of Test set: {test_len}")
-

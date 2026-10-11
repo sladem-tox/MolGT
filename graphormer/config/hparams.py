@@ -36,7 +36,7 @@ hyperparameters = create_composite_decorator(
         default="default_hparams.toml",
     ),
     click.option("--logdir", default="runs"),
-    click.option("--dataset", type=click.Path(exists=True), default="data/raw/Combined.xlsx", help="Dataset CSV/XLSX file with smiles and ames columns, or an ogbg_molpcba directory."),
+    click.option("--dataset", type=click.Path(exists=True), default="data/raw/Combined.xlsx", help="Dataset CSV/XLSX file with smiles and target columns, or an ogbg_molpcba directory."),
     click.option(
         "--dataset_regime", type=click.Choice(DatasetRegime, case_sensitive=False), default=DatasetRegime.TRAIN
     ),  # type: ignore

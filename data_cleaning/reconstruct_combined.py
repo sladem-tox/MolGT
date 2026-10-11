@@ -29,6 +29,10 @@ def annotate(frame, input_name):
 
 def reconstruct(public, honma, test_rows=TEST_ROWS):
     """Return an archival candidate and separate, validated training/test tables."""
+    if 'target' in public.columns and 'ames' not in public.columns:
+        public = public.rename(columns={'target': 'ames'})
+    if 'ames' not in public.columns or 'ames' not in honma.columns:
+        raise ValueError('Public input must contain target and Honma input must contain ames')
     if not 0 < test_rows < len(honma):
         raise ValueError('Honma must contain both training and test rows')
     if not set(public.source).issubset(set(SOURCE_ORDER) - {'honma'}):
@@ -73,7 +77,12 @@ def reconstruct(public, honma, test_rows=TEST_ROWS):
     for frame in [pool, test]:
         frame['smiles'] = frame.canonical_smiles
         frame['ames'] = frame.ames.astype(int)
-    return historical, pool.reset_index(drop=True), test.reset_index(drop=True), pd.concat(rejected, ignore_index=True)
+    return (
+        historical.rename(columns={'ames': 'target'}),
+        pool.reset_index(drop=True).rename(columns={'ames': 'target'}),
+        test.reset_index(drop=True).rename(columns={'ames': 'target'}),
+        pd.concat(rejected, ignore_index=True).rename(columns={'ames': 'target'}),
+    )
 
 
 def fingerprint(path):
@@ -99,14 +108,15 @@ def main():
     combined = pd.concat([train, test], ignore_index=True)
     assert set(train.smiles).isdisjoint(test.smiles)
     assert not combined.smiles.duplicated().any()
-    assert combined.ames.isin([0, 1]).all()
-    columns = ['smiles', 'ames', 'source', 'split', 'original_smiles', 'input', 'input_row']
+    assert combined.target.isin([0, 1]).all()
+    columns = ['smiles', 'target', 'source', 'split', 'original_smiles', 'input', 'input_row']
     args.output.mkdir(parents=True, exist_ok=True)
     outputs = {'historical_candidate.csv': historical, 'combined_train_validation.csv': train,
                'honma_test.csv': test, 'combined_reconstructed.csv': combined}
     for name, frame in outputs.items():
+        frame = frame.rename(columns={'ames': 'target'})
         frame[columns].to_csv(args.output / name, index=False)
-    rejected[columns + ['reason']].to_csv(args.output / 'excluded_rows.csv', index=False)
+    rejected.rename(columns={'ames': 'target'})[columns + ['reason']].to_csv(args.output / 'excluded_rows.csv', index=False)
     historical_train = historical[historical.split != 'Test']
     summary = {
         'status': 'candidate reconstruction; original complete output unavailable for exact comparison',
@@ -117,8 +127,8 @@ def main():
         'historical_invalid_smiles': int(historical.canonical_smiles.isna().sum()),
         'excluded': rejected.reason.value_counts().to_dict(),
         'training_sources': train.source.value_counts().to_dict(),
-        'training_labels': train.ames.value_counts().to_dict(),
-        'test_labels': test.ames.value_counts().to_dict(),
+        'training_targets': train.target.value_counts().to_dict(),
+        'test_targets': test.target.value_counts().to_dict(),
         'canonical_train_test_overlap': len(set(train.smiles) & set(test.smiles)),
         'test_reference_matches_order_and_labels': True,
         'output_sha256': {name: fingerprint(args.output / name)['sha256'] for name in [*outputs, 'excluded_rows.csv']},

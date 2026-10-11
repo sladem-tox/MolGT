@@ -45,21 +45,21 @@ class GraphormerDataset(InMemoryDataset):
         else:
             raise ValueError(f"Unsupported file type: {file_extension}")
 
-        missing = {"smiles", "ames"} - set(df.columns)
+        missing = {"smiles", "target"} - set(df.columns)
         if missing:
-            raise ValueError(f"Dataset requires smiles and ames columns; missing: {', '.join(sorted(missing))}")
+            raise ValueError(f"Dataset requires smiles and target columns; missing: {', '.join(sorted(missing))}")
 
-        if not df["ames"].isin([0, 1]).all():
-            raise ValueError("The ames column must contain binary labels 0/1, without missing values")
+        if not df["target"].isin([0, 1]).all():
+            raise ValueError("The target column must contain binary labels 0/1, without missing values")
         if not df["smiles"].map(lambda value: isinstance(value, str) and bool(value.strip())).all():
             raise ValueError("The smiles column must contain nonempty SMILES strings")
 
         data_list = []
 
-        for smiles, ames in tqdm(
-            zip(df["smiles"], df["ames"]), total=len(df), desc="Processing dataset", unit="SMILES"
+        for smiles, target in tqdm(
+            zip(df["smiles"], df["target"]), total=len(df), desc="Processing dataset", unit="SMILES"
         ):
-            label = torch.tensor([ames], dtype=torch.float)
+            label = torch.tensor([target], dtype=torch.float)
 
             warning = check_smiles_and_label(smiles, label)
             if warning:

@@ -9,13 +9,13 @@ Local outputs are in `data/reconstructed/` and excluded from Git:
 | File | Rows | Purpose |
 | --- | ---: | --- |
 | `combined_train_validation.csv` | 21,192 | Clean pool for a fresh training/validation split |
-| `honma_test.csv` | 1,589 | Original test molecules and labels, with canonical SMILES |
+| `honma_test.csv` | 1,589 | Original test molecules and `target` values, with canonical SMILES |
 | `combined_reconstructed.csv` | 22,781 | Clean pool and test set together, with split labels |
 | `historical_candidate.csv` | 24,108 | Archival candidate retaining the original script's behaviour |
 
 The clean version excludes six missing labels, two invalid SMILES, and 1,325 public rows that duplicate test molecules after canonicalization. Its training and test sets have no exact canonical-molecule overlap. Test identities, order, and labels match the independent `Honma_Ames_Test.xlsx` workbook. The six missing labels also have no matching structure in the older raw Honma training workbook; they were not inferred.
 
-Use `combined_train_validation.csv` for training and `honma_test.csv` for evaluation. The combined and historical files include test rows; the historical file also retains two invalid structures and the original train/test overlap.
+All generated CSVs use the model-facing `smiles,target` schema. Use `combined_train_validation.csv` for training and `honma_test.csv` for evaluation. The combined and historical files include test rows; the historical file also retains two invalid structures and the original train/test overlap.
 
 `excluded_rows.csv` records each excluded row and reason. `manifest.json` records source/output hashes, counts, labels, and RDKit version. `constructor_verification.json` records the original-script and checkpoint checks. Input row numbers are one-based data rows, excluding headers.
 

@@ -148,7 +148,7 @@ def main():
     _, labels, logits = evaluate(model, test_loader, loss_function, device)
     test_seconds = time.perf_counter()-test_start
     probabilities = torch.sigmoid(torch.from_numpy(logits)).numpy()
-    frame = pd.read_csv(test_path)[['smiles', 'ames']]
+    frame = pd.read_csv(test_path)[['smiles', 'target']]
     frame['probability'] = probabilities
     frame.to_csv(args.output / 'retrained_test_predictions.csv', index=False)
     result = {'settings': settings, 'epochs_completed': len(history), 'best_epoch': best_epoch+1,

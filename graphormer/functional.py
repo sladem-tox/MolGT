@@ -1,6 +1,7 @@
 """Shortest paths over physical bonds, with a separate virtual node."""
 
 import torch
+
 from graphormer.shortest_paths import shortest_paths
 
 
